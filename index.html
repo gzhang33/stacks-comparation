@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025 新手技术栈透视指南 (实战终极版)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background-color: #f8fafc; /* Slate-50 */
+            color: #334155;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        /* Card Styles */
+        .tech-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            border-bottom-width: 4px; 
+            border-color: transparent;
+        }
+        .tech-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .tech-card.active {
+            background-color: #fff;
+            border-bottom-color: var(--theme-color);
+            box-shadow: inset 0 2px 4px 0 rgba(0,0,0,0.05);
+        }
+
+        /* Simulation Canvas */
+        #sim-container {
+            position: relative;
+            width: 100%;
+            height: 160px;
+            background: #0f172a; /* Slate-900 */
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.3);
+        }
+        #simCanvas { width: 100%; height: 100%; display: block; }
+        
+        /* Code Block Styles */
+        .code-window {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            border: 1px solid #334155;
+            line-height: 1.6;
+        }
+        .kw { color: #c678dd; } /* Keyword */
+        .str { color: #98c379; } /* String */
+        .fn { color: #61afef; } /* Function */
+        .comment { color: #94a3b8; font-style: italic; display: inline-block; margin-left: 10px; } /* Comments */
+
+        /* Animation */
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Badges */
+        .badge-link {
+            transition: all 0.2s;
+        }
+        .badge-link:hover {
+            transform: translateX(2px);
+            text-decoration: underline;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    </style>
+</head>
+<body class="selection:bg-indigo-100 selection:text-indigo-900">
+
+    <!-- Compact Nav -->
+    <nav class="bg-white/80 backdrop-blur border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">👨‍💻</span>
+                <span class="font-bold text-slate-800">技术栈透视 (实战版)</span>
+            </div>
+            <div class="flex space-x-6 text-sm font-medium">
+                <button onclick="switchTab('dashboard')" id="btn-dashboard" class="text-indigo-600">全景概览</button>
+                <button onclick="switchTab('lang-map')" id="btn-lang-map" class="text-slate-500 hover:text-slate-800">语言版图</button>
+                <button onclick="switchTab('compare')" id="btn-compare" class="text-slate-500 hover:text-slate-800">硬核对比</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto px-4 py-6">
+
+        <!-- DASHBOARD VIEW -->
+        <div id="view-dashboard" class="fade-in space-y-6">
+            
+            <!-- 1. Tech Selector (Top Row) -->
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3" id="tech-grid">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- 2. Main Detail Area (Split Layout) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6" id="detail-panel">
+                
+                <!-- LEFT COLUMN: Visuals & Code (The "What") -->
+                <div class="lg:col-span-7 space-y-4">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <span class="text-4xl" id="detail-icon">⚛️</span>
+                            <div>
+                                <h2 class="text-2xl font-bold text-slate-800 leading-tight" id="detail-title">React</h2>
+                                <div class="text-xs font-bold uppercase tracking-wider text-slate-400" id="detail-type">Frontend</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                             <div class="text-xs text-slate-400 mb-1">底层逻辑</div>
+                             <div class="text-sm font-medium text-slate-700 bg-slate-100 px-2 py-1 rounded" id="detail-logic-tag">Virtual DOM</div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Simulation -->
+                    <div id="sim-container">
+                        <canvas id="simCanvas"></canvas>
+                        <div class="absolute bottom-2 right-3 text-xs text-white/50 bg-black/40 px-2 py-1 rounded pointer-events-none">
+                            运行机制可视化
+                        </div>
+                    </div>
+
+                    <!-- Code Reality Check -->
+                    <div class="relative group">
+                        <div class="absolute -top-3 left-4 bg-indigo-600 text-white text-xs font-bold px-2 py-0.5 rounded shadow-sm z-10">
+                            代码真容 (带人话注释)
+                        </div>
+                        <div class="code-window" id="detail-code">
+                            <!-- Code injected here -->
+                        </div>
+                    </div>
+
+                    <!-- Use Cases (Concrete) -->
+                    <div class="bg-white p-4 rounded-xl border border-slate-200">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">📱 真实应用举例 (我学会能做啥？)</h4>
+                        <div class="flex flex-wrap gap-3" id="detail-cases">
+                            <!-- Cases injected -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: The "How" (Learning Path & Reality) -->
+                <div class="lg:col-span-5 space-y-4">
+                    
+                    <!-- Reality Card -->
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 h-full flex flex-col">
+                        
+                        <!-- Learning Path (Actionable) -->
+                        <div class="mb-6 bg-gradient-to-r from-indigo-50 to-blue-50 p-4 rounded-lg border border-indigo-100">
+                            <h4 class="text-sm font-bold text-indigo-800 mb-3 flex items-center">
+                                🎓 免费学习路线 (亲测推荐)
+                            </h4>
+                            <div class="space-y-2" id="detail-path">
+                                <!-- Links injected -->
+                            </div>
+                        </div>
+
+                        <!-- Time Estimate -->
+                        <div class="mb-6">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">⏱️ 学习时间预估</h4>
+                            <div class="bg-slate-50 p-3 rounded border border-slate-100 text-sm">
+                                <span class="font-bold text-slate-700" id="detail-time">...</span>
+                            </div>
+                        </div>
+
+                        <!-- Setup Pain -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-end mb-2">
+                                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide">环境配置痛苦指数</h4>
+                                <span class="text-xs font-bold" id="detail-setup-text">中等</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-2.5">
+                                <div id="detail-setup-bar" class="h-2.5 rounded-full transition-all duration-500" style="width: 40%"></div>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-2 italic" id="detail-setup-desc">...</p>
+                        </div>
+
+                        <!-- Pros/Cons Compact -->
+                        <div class="mt-auto pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-emerald-600 font-bold text-sm mb-1">👍 爽点</div>
+                                <ul class="text-xs text-slate-600 space-y-1 list-disc list-inside" id="detail-pros"></ul>
+                            </div>
+                            <div>
+                                <div class="text-rose-500 font-bold text-sm mb-1">👎 坑点</div>
+                                <ul class="text-xs text-slate-600 space-y-1 list-disc list-inside" id="detail-cons"></ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LANGUAGE MAP VIEW -->
+        <div id="view-lang-map" class="hidden fade-in">
+             <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 h-[500px] relative">
+                 <h2 class="text-lg font-bold text-slate-800 absolute top-4 left-4 z-10 bg-white/80 px-2 rounded">
+                     学习曲线 vs 运行性能
+                 </h2>
+                 <canvas id="scatterChart"></canvas>
+             </div>
+        </div>
+
+        <!-- COMPARATOR VIEW -->
+        <div id="view-compare" class="hidden fade-in space-y-4">
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+                <div class="flex gap-4 mb-6">
+                    <select id="compare-select-1" class="flex-1 p-2 border rounded bg-slate-50 font-bold text-slate-700"></select>
+                    <span class="self-center font-bold text-slate-300">VS</span>
+                    <select id="compare-select-2" class="flex-1 p-2 border rounded bg-slate-50 font-bold text-slate-700"></select>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500 border-b border-slate-200">
+                            <tr>
+                                <th class="p-3 w-1/6">维度</th>
+                                <th class="p-3 w-5/12" id="th-name-1">A</th>
+                                <th class="p-3 w-5/12" id="th-name-2">B</th>
+                            </tr>
+                        </thead>
+                        <tbody id="compare-tbody" class="divide-y divide-slate-100">
+                            <!-- Rows injected -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const techData = [
+            {
+                id: "react",
+                name: "React + Node",
+                shortName: "React",
+                color: "#38bdf8", 
+                type: "全栈 JS",
+                logicTag: "Virtual DOM",
+                codeSnippet: `<span class="kw">function</span> <span class="fn">Welcome</span>() {\n  <span class="comment">// 就像搭积木，这是一个"欢迎"组件</span>\n  <span class="kw">return</span> &lt;h1&gt;<span class="str">Hello World</span>&lt;/h1&gt;;\n}`,
+                setupDifficulty: 3, 
+                setupDesc: "新手卡关点：npm 包下载慢（需配置镜像），Node 版本冲突。",
+                timeEstimate: "入门: 2周 | 熟练: 2-3个月",
+                learningPaths: [
+                    {name: "React 官方中文文档 (必看)", url: "https://zh-hans.react.dev/learn"},
+                    {name: "freeCodeCamp 实战教程", url: "https://www.freecodecamp.org/chinese/learn/front-end-development-libraries/#react"}
+                ],
+                useCases: ["知乎 Web版", "Airbnb", "Netflix", "VS Code (Electron)"],
+                pros: ["生态极富，遇到问题百度一下全有", "学会 JS 就能通吃前后端"],
+                cons: ["配置复杂，新手容易晕", "工具更新太快，几个月变一次"],
+                simType: "grid"
+            },
+            {
+                id: "python",
+                name: "Python",
+                shortName: "Python",
+                color: "#facc15", 
+                type: "AI / 脚本",
+                logicTag: "解释型语言",
+                codeSnippet: `<span class="kw">print</span>(<span class="str">"Hello World"</span>) <span class="comment">// 真的很简单，就一行</span>\n\n<span class="comment">// 一行代码把数字都乘2 (列表推导式)</span>\ndata = [x*<span class="str">2</span> <span class="kw">for</span> x <span class="kw">in</span> range(<span class="str">10</span>)]`,
+                setupDifficulty: 2,
+                setupDesc: "新手卡关点：pip 下载慢，conda 环境配置。",
+                timeEstimate: "语法: 1周 | 爬虫小成: 3周",
+                learningPaths: [
+                    {name: "廖雪峰 Python 教程 (经典)", url: "https://www.liaoxuefeng.com/wiki/1016959663602400"},
+                    {name: "Python 官方中文文档", url: "https://docs.python.org/zh-cn/3/tutorial/"}
+                ],
+                useCases: ["ChatGPT 训练脚本", "抢票软件", "Instagram 后端", "数据分析报表"],
+                pros: ["代码像英语一样好读", "AI 领域没有对手"],
+                cons: ["运行速度慢，不适合高并发", "移动端开发几乎为 0"],
+                simType: "pipeline"
+            },
+            {
+                id: "java",
+                name: "Java (Spring)",
+                shortName: "Java",
+                color: "#fb923c", 
+                type: "企业后端",
+                logicTag: "JVM",
+                codeSnippet: `<span class="kw">public class</span> Main {\n  <span class="comment">// 必须有个主入口，有点啰嗦</span>\n  <span class="kw">public static void</span> <span class="fn">main</span>(String[] args) {\n    System.out.println(<span class="str">"Hello"</span>);\n  }\n}`,
+                setupDifficulty: 4,
+                setupDesc: "新手卡关点：环境变量 JAVA_HOME，Maven 仓库配置，IDEA 安装。",
+                timeEstimate: "Java SE: 1个月 | Web全栈: 4个月",
+                learningPaths: [
+                    {name: "韩顺平零基础 30天 (B站)", url: "https://www.bilibili.com/video/BV1fh411y7R8"},
+                    {name: "Java 全栈知识体系", url: "https://pdai.tech/"}
+                ],
+                useCases: ["淘宝/京东后台", "我的世界 (Minecraft)", "银行交易系统"],
+                pros: ["类型严格，大型项目不崩", "多线程模型极其成熟"],
+                cons: ["代码太啰嗦，写起来累", "启动慢，内存吃得紧"],
+                simType: "fortress"
+            },
+            {
+                id: "go",
+                name: "Go (Golang)",
+                shortName: "Go",
+                color: "#06b6d4", 
+                type: "云原生",
+                logicTag: "Goroutine",
+                codeSnippet: `<span class="kw">package</span> main\n<span class="kw">import</span> <span class="str">"fmt"</span> <span class="comment">// 导入工具包</span>\n\n<span class="kw">func</span> <span class="fn">main</span>() {\n  fmt.Println(<span class="str">"Hello"</span>) <span class="comment">// 打印</span>\n}`,
+                setupDifficulty: 1,
+                setupDesc: "极其简单，下载安装包，配个 GOPATH 就能跑。",
+                timeEstimate: "上手: 1周 | 写服务: 3周",
+                learningPaths: [
+                    {name: "Go 语言之旅 (官方互动)", url: "https://tour.go-zh.org/welcome/1"},
+                    {name: "Go By Example 中文版", url: "https://gobyexample-cn.github.io/"}
+                ],
+                useCases: ["Bilibili 后端", "Docker 容器", "七牛云存储", "抖音消息服务"],
+                pros: ["部署极快 (直接是一个文件)", "并发能力极强 (协程)"],
+                cons: ["错误处理全是 if err != nil", "泛型支持较弱"],
+                simType: "particles"
+            },
+            {
+                id: "vue",
+                name: "Vue.js",
+                shortName: "Vue",
+                color: "#4ade80", 
+                type: "前端框架",
+                logicTag: "Reactive",
+                codeSnippet: `&lt;script setup&gt;\n  <span class="comment">// 定义一个变量，改它界面就会变</span>\n  <span class="kw">const</span> msg = <span class="str">'Hi Vue'</span>\n&lt;/script&gt;\n&lt;template&gt;\n  &lt;div&gt;{{ msg }}&lt;/div&gt;\n&lt;/template&gt;`,
+                setupDifficulty: 2,
+                setupDesc: "Vite 脚手架一键生成，比 Webpack 简单多了。",
+                timeEstimate: "上手: 3天 | 熟练: 3周",
+                learningPaths: [
+                    {name: "Vue 官方互动教程 (超赞)", url: "https://cn.vuejs.org/tutorial/"},
+                    {name: "尚硅谷 Vue 全家桶 (B站)", url: "https://www.bilibili.com/video/BV1Zy4y1K7SH"}
+                ],
+                useCases: ["Bilibili 创作中心", "饿了么 H5", "国内大部分管理后台"],
+                pros: ["模版语法简单，符合直觉", "文档中文极其友好"],
+                cons: ["国外大厂用的少", "TS 支持不如 React 完美"],
+                simType: "grid_vue"
+            },
+            {
+                id: "flutter",
+                name: "Flutter",
+                shortName: "Flutter",
+                color: "#6366f1", 
+                type: "移动端",
+                logicTag: "Skia Engine",
+                codeSnippet: `Text(<span class="str">'Hello'</span>,\n  <span class="comment">// 像搭积木一样设置样式</span>\n  style: TextStyle(size: <span class="str">20</span>)\n);`,
+                setupDifficulty: 5,
+                setupDesc: "地狱级。Android SDK + Xcode + CocoaPods，网不好能配一天。",
+                timeEstimate: "入门: 2周 | 独立App: 1.5个月",
+                learningPaths: [
+                    {name: "Flutter 官方中文网", url: "https://flutter.cn/learn"},
+                    {name: "Flutter 实战 (电子书)", url: "https://book.flutterchina.club/"}
+                ],
+                useCases: ["闲鱼 App", "链家 App", "Google Pay", "BMW 汽车车机"],
+                pros: ["写一套代码跑两端 (iOS/And)", "渲染性能接近原生"],
+                cons: ["包体积大", "原生功能还要写插件"],
+                simType: "dual"
+            }
+        ];
+
+        // --- SIMULATION ENGINE (Fixed & Robust) ---
+        let simCtx = null;
+        let simCanvas = null;
+        let simAnimationId = null;
+        
+        // Use a state object to manage resize consistency
+        let simState = {
+            width: 0,
+            height: 0,
+            frame: 0,
+            particles: [],
+            currentType: null,
+            currentColor: null
+        };
+
+        function initSimulation() {
+            simCanvas = document.getElementById('simCanvas');
+            if(simCanvas) {
+                simCtx = simCanvas.getContext('2d');
+                resizeSimulation();
+                window.addEventListener('resize', resizeSimulation);
+            }
+        }
+
+        function resizeSimulation() {
+            if (!simCanvas) return;
+            const container = document.getElementById('sim-container');
+            // Ensure we use client sizes to match CSS display size
+            simCanvas.width = container.clientWidth;
+            simCanvas.height = container.clientHeight;
+            simState.width = simCanvas.width;
+            simState.height = simCanvas.height;
+        }
+
+        function startSimulation(type, color) {
+            // Cancel previous loop
+            if (simAnimationId) cancelAnimationFrame(simAnimationId);
+            
+            // Re-calculate dims just in case
+            if(!simCanvas) initSimulation();
+            resizeSimulation();
+
+            simState.currentType = type;
+            simState.currentColor = color;
+            simState.particles = [];
+            simState.frame = 0;
+
+            const w = simState.width;
+            const h = simState.height;
+
+            // Init particles based on type
+            if (type === 'particles') { // Go
+                for(let i=0; i<40; i++) simState.particles.push({x: Math.random()*w, y: Math.random()*h, s: 2+Math.random()*3});
+            } else if (type === 'fortress') { // Java
+                for(let i=0; i<15; i++) simState.particles.push({x: Math.random()*w, y: Math.random()*h, vx: (Math.random()-0.5), vy: (Math.random()-0.5)});
+            } else if (type === 'pipeline') { // Python
+                for(let i=0; i<3; i++) simState.particles.push({x: i * (w/3), step: i});
+            }
+            // grid, grid_vue, dual don't need persistent particles array
+
+            draw();
+        }
+
+        function draw() {
+            if(!simCtx) return;
+            
+            const w = simState.width;
+            const h = simState.height;
+            const type = simState.currentType;
+            const color = simState.currentColor;
+
+            // Clear Background
+            simCtx.fillStyle = '#0f172a';
+            simCtx.fillRect(0, 0, w, h);
+            simState.frame++;
+
+            if (type === 'particles') {
+                // Go: High Concurrency
+                simCtx.fillStyle = color;
+                simState.particles.forEach(p => {
+                    p.x += p.s * 2;
+                    if(p.x > w) p.x = 0;
+                    simCtx.beginPath(); simCtx.arc(p.x, p.y, 2, 0, Math.PI*2); simCtx.fill();
+                });
+                simCtx.fillStyle = '#fff'; simCtx.font = "12px sans-serif"; simCtx.fillText("Go: 极速并发 (协程)", 10, 20);
+            } 
+            else if (type === 'fortress') {
+                // Java: Stability
+                simCtx.fillStyle = '#334155';
+                simCtx.fillRect(w/2-25, h/2-25, 50, 50); // Server Box
+                simCtx.fillStyle = color;
+                simState.particles.forEach(p => {
+                    p.x += p.vx; p.y += p.vy;
+                    // Bounce off walls
+                    if(p.x < 0 || p.x > w) p.vx *= -1;
+                    if(p.y < 0 || p.y > h) p.vy *= -1;
+                    // Bounce off box
+                    if(p.x > w/2-30 && p.x < w/2+30 && p.y > h/2-30 && p.y < h/2+30) { p.vx *= -1; p.vy *= -1; }
+                    simCtx.beginPath(); simCtx.arc(p.x, p.y, 3, 0, Math.PI*2); simCtx.fill();
+                });
+                simCtx.fillStyle = '#fff'; simCtx.font = "12px sans-serif"; simCtx.fillText("Java: 架构稳健 (JVM)", 10, 20);
+            }
+            else if (type === 'pipeline') {
+                // Python: Sequential Processing
+                const speed = 2;
+                simState.particles.forEach(p => {
+                    p.x += speed;
+                    if(p.x > w + 50) p.x = -50;
+                    simCtx.fillStyle = p.x > w/2 ? '#4ade80' : color;
+                    simCtx.fillRect(p.x, h/2-10, 20, 20);
+                    // Connector line
+                    simCtx.strokeStyle = '#334155'; simCtx.beginPath(); simCtx.moveTo(0, h/2); simCtx.lineTo(w, h/2); simCtx.stroke();
+                });
+                simCtx.fillStyle = '#fff'; simCtx.font = "12px sans-serif"; simCtx.fillText("Python: 简单流式处理", 10, 20);
+            }
+            else if (type === 'grid' || type === 'grid_vue') {
+                // React/Vue: Grid
+                const cols = 4; const rows = 2;
+                const cellW = 30; const gap = 10;
+                // Center grid based on CURRENT width
+                const startX = (w - (cols*cellW + (cols-1)*gap))/2;
+                const startY = (h - (rows*cellW + (rows-1)*gap))/2;
+
+                for(let r=0; r<rows; r++) {
+                    for(let c=0; c<cols; c++) {
+                        const isFlash = Math.floor(simState.frame/40) % (rows*cols) === (r*cols+c);
+                        simCtx.fillStyle = isFlash ? color : '#1e293b';
+                        simCtx.fillRect(startX + c*(cellW+gap), startY + r*(cellW+gap), cellW, cellW);
+                    }
+                }
+                simCtx.fillStyle = '#fff'; simCtx.font = "12px sans-serif"; simCtx.fillText(type === 'grid' ? "React: 虚拟 DOM" : "Vue: 响应式更新", 10, 20);
+            }
+            else if (type === 'dual') {
+                // Flutter: Dual Screen
+                const pw = 25; const ph = 45;
+                const cx = w/2; const cy = h/2;
+                simCtx.strokeStyle = color; simCtx.lineWidth=2;
+                simCtx.strokeRect(cx-30-pw, cy-ph/2, pw, ph);
+                simCtx.strokeRect(cx+30, cy-ph/2, pw, ph);
+                
+                const s = 5 + Math.sin(simState.frame/20)*5;
+                simCtx.fillStyle = color;
+                simCtx.beginPath(); simCtx.arc(cx-30-pw/2, cy, s, 0, Math.PI*2); simCtx.fill();
+                simCtx.beginPath(); simCtx.arc(cx+30+pw/2, cy, s, 0, Math.PI*2); simCtx.fill();
+                simCtx.fillStyle = '#fff'; simCtx.font = "12px sans-serif"; simCtx.fillText("Flutter: 双端一致", 10, 20);
+            }
+
+            simAnimationId = requestAnimationFrame(draw);
+        }
+
+        // --- OTHER LOGIC (Charts, Tabs, etc) ---
+        let currentScatterChart = null;
+
+        // Init
+        window.addEventListener('DOMContentLoaded', () => {
+            renderTechGrid();
+            renderComparators();
+            
+            // Initialize simulation system properly
+            initSimulation();
+            
+            // Start default
+            selectTech('react'); 
+            
+            renderScatterChart();
+        });
+
+        // ... (Remaining Logic for TechGrid, SelectTech, Charts is same as before, 
+        // just ensuring selectTech calls the NEW startSimulation) ...
+
+        function renderTechGrid() {
+            const grid = document.getElementById('tech-grid');
+            grid.innerHTML = techData.map(t => `
+                <div class="tech-card bg-white p-3 rounded-lg border border-slate-200 text-center" 
+                     onclick="selectTech('${t.id}')" data-id="${t.id}"
+                     style="--theme-color: ${t.color}">
+                    <div class="text-2xl mb-1">${getIcon(t.id)}</div>
+                    <div class="font-bold text-slate-700 text-xs">${t.shortName}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectTech(id) {
+            document.querySelectorAll('.tech-card').forEach(el => el.classList.remove('active'));
+            document.querySelector(`[data-id="${id}"]`).classList.add('active');
+
+            const data = techData.find(t => t.id === id);
+
+            document.getElementById('detail-title').innerText = data.name;
+            document.getElementById('detail-icon').innerText = getIcon(data.id);
+            document.getElementById('detail-type').innerText = data.type;
+            document.getElementById('detail-logic-tag').innerText = data.logicTag;
+            document.getElementById('detail-code').innerHTML = `<pre>${data.codeSnippet}</pre>`;
+
+            const caseContainer = document.getElementById('detail-cases');
+            caseContainer.innerHTML = data.useCases.map(c => 
+                `<span class="bg-indigo-50 text-indigo-700 px-2 py-1 rounded text-xs border border-indigo-100 font-medium">${c}</span>`
+            ).join('');
+
+            const pathContainer = document.getElementById('detail-path');
+            pathContainer.innerHTML = data.learningPaths.map(p => 
+                `<a href="${p.url}" target="_blank" class="badge-link flex items-center justify-between bg-white border border-indigo-200 p-2 rounded text-xs text-indigo-600 font-medium hover:bg-indigo-50 hover:shadow-sm">
+                    <span>${p.name}</span>
+                    <span>↗</span>
+                 </a>`
+            ).join('');
+
+            document.getElementById('detail-time').innerText = data.timeEstimate;
+            document.getElementById('detail-setup-desc').innerText = data.setupDesc;
+            const bar = document.getElementById('detail-setup-bar');
+            bar.style.width = (data.setupDifficulty * 20) + '%';
+            
+            let painColor = 'bg-emerald-500';
+            let painText = '简单';
+            if(data.setupDifficulty >= 3) { painColor = 'bg-amber-400'; painText = '中等'; }
+            if(data.setupDifficulty >= 5) { painColor = 'bg-rose-500'; painText = '地狱级'; }
+            
+            bar.className = `h-2.5 rounded-full transition-all duration-500 ${painColor}`;
+            document.getElementById('detail-setup-text').innerText = painText;
+            document.getElementById('detail-setup-text').className = `text-xs font-bold ${painColor.replace('bg-', 'text-')}`;
+
+            document.getElementById('detail-pros').innerHTML = data.pros.map(p => `<li>${p}</li>`).join('');
+            document.getElementById('detail-cons').innerHTML = data.cons.map(c => `<li>${c}</li>`).join('');
+
+            // Call the robust startSimulation
+            startSimulation(data.simType, data.color);
+        }
+
+        function getIcon(id) {
+            const map = { react: '⚛️', python: '🐍', java: '☕', go: '🐹', vue: '🟩', flutter: '📱' };
+            return map[id] || '❓';
+        }
+
+        function switchTab(viewId) {
+            ['dashboard', 'lang-map', 'compare'].forEach(id => {
+                document.getElementById(`view-${id}`).classList.add('hidden');
+                document.getElementById(`btn-${id}`).classList.remove('text-indigo-600', 'font-bold');
+                document.getElementById(`btn-${id}`).classList.add('text-slate-500');
+            });
+            document.getElementById(`view-${viewId}`).classList.remove('hidden');
+            document.getElementById(`btn-${viewId}`).classList.add('text-indigo-600', 'font-bold');
+            document.getElementById(`btn-${viewId}`).classList.remove('text-slate-500');
+            
+            if(viewId === 'lang-map' && currentScatterChart) currentScatterChart.resize();
+        }
+
+        function renderScatterChart() {
+            const ctx = document.getElementById('scatterChart').getContext('2d');
+            const data = [
+                {x: 8, y: 5, r: 15, label: 'JS/Node'},
+                {x: 10, y: 3, r: 15, label: 'Python'},
+                {x: 5, y: 7, r: 15, label: 'Java'},
+                {x: 6, y: 9, r: 15, label: 'Go'},
+                {x: 9, y: 6, r: 15, label: 'Vue'},
+                {x: 4, y: 8, r: 15, label: 'Flutter/Dart'}
+            ];
+            currentScatterChart = new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [{
+                        label: 'Tech',
+                        data: data,
+                        backgroundColor: ['#38bdf880', '#facc1580', '#fb923c80', '#06b6d480', '#4ade8080', '#6366f180'],
+                        borderColor: ['#38bdf8', '#facc15', '#fb923c', '#06b6d4', '#4ade80', '#6366f1'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { title: {display: true, text: '学习容易度 (Easy ->)'}, min: 2, max: 11 },
+                        y: { title: {display: true, text: '运行性能 (Fast ->)'}, min: 2, max: 11 }
+                    },
+                    plugins: { legend: {display: false}, tooltip: { callbacks: { label: (ctx) => ctx.raw.label } } }
+                },
+                plugins: [{
+                    id: 'labels',
+                    afterDatasetsDraw(chart) {
+                        const ctx = chart.ctx;
+                        chart.data.datasets[0].data.forEach((d, i) => {
+                            const meta = chart.getDatasetMeta(0);
+                            const pos = meta.data[i].tooltipPosition();
+                            ctx.fillStyle = '#334155'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+                            ctx.fillText(d.label, pos.x, pos.y + 25);
+                        });
+                    }
+                }]
+            });
+        }
+
+        function renderComparators() {
+            const opts = techData.map(t => `<option value="${t.id}">${t.shortName}</option>`).join('');
+            const s1 = document.getElementById('compare-select-1');
+            const s2 = document.getElementById('compare-select-2');
+            s1.innerHTML = opts; s2.innerHTML = opts;
+            s2.value = 'java'; 
+            
+            const updateComp = () => {
+                const t1 = techData.find(t => t.id === s1.value);
+                const t2 = techData.find(t => t.id === s2.value);
+                document.getElementById('th-name-1').innerText = t1.name;
+                document.getElementById('th-name-2').innerText = t2.name;
+                
+                const rows = [
+                    { name: '代码真容', v1: `<code class="text-xs bg-slate-100 p-1 rounded block w-full overflow-x-auto">${t1.codeSnippet}</code>`, v2: `<code class="text-xs bg-slate-100 p-1 rounded block w-full overflow-x-auto">${t2.codeSnippet}</code>` },
+                    { name: '学习时间', v1: t1.timeEstimate, v2: t2.timeEstimate },
+                    { name: '配置难度', v1: '⭐'.repeat(t1.setupDifficulty), v2: '⭐'.repeat(t2.setupDifficulty) },
+                    { name: '典型应用', v1: t1.useCases.join(', '), v2: t2.useCases.join(', ') }
+                ];
+                
+                document.getElementById('compare-tbody').innerHTML = rows.map(r => `
+                    <tr class="border-b border-slate-50 last:border-0">
+                        <td class="p-3 text-xs font-bold text-slate-400 uppercase">${r.name}</td>
+                        <td class="p-3 text-slate-700">${r.v1}</td>
+                        <td class="p-3 text-slate-700 border-l border-slate-50">${r.v2}</td>
+                    </tr>
+                `).join('');
+            };
+            s1.addEventListener('change', updateComp);
+            s2.addEventListener('change', updateComp);
+            updateComp();
+        }
+
+    </script>
+</body>
+</html>
