@@ -14,6 +14,12 @@
             background-color: #f8fafc; /* Slate-50 */
             color: #334155;
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex: 1; /* Push footer to bottom */
         }
         /* Card Styles */
         .tech-card {
@@ -102,12 +108,19 @@
         <!-- DASHBOARD VIEW -->
         <div id="view-dashboard" class="fade-in space-y-6">
             
-            <!-- 1. Tech Selector (Top Row) -->
+            <!-- [NEW] 1. Hero Section -->
+            <div class="bg-gradient-to-r from-indigo-600 to-blue-500 rounded-xl p-8 text-white shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-10 text-9xl transform rotate-12 pointer-events-none">🗺️</div>
+                <h1 class="text-3xl font-bold mb-2">编程世界的第一张地图</h1>
+                <p class="text-blue-100 text-lg max-w-2xl">别让“选择困难症”阻挡你的代码之路。点击下方卡片，看清每个技术栈的真实面目。</p>
+            </div>
+
+            <!-- Tech Selector (Top Row) -->
             <div class="grid grid-cols-3 sm:grid-cols-6 gap-3" id="tech-grid">
                 <!-- Injected via JS -->
             </div>
 
-            <!-- 2. Main Detail Area (Split Layout) -->
+            <!-- Main Detail Area (Split Layout) -->
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6" id="detail-panel">
                 
                 <!-- LEFT COLUMN: Visuals & Code (The "What") -->
@@ -209,11 +222,33 @@
 
         <!-- LANGUAGE MAP VIEW -->
         <div id="view-lang-map" class="hidden fade-in">
-             <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 h-[500px] relative">
+             <div class="bg-white rounded-xl shadow-sm p-4 border border-slate-200 relative mb-6">
                  <h2 class="text-lg font-bold text-slate-800 absolute top-4 left-4 z-10 bg-white/80 px-2 rounded">
                      学习曲线 vs 运行性能
                  </h2>
-                 <canvas id="scatterChart"></canvas>
+                 <div class="h-[400px]">
+                    <canvas id="scatterChart"></canvas>
+                 </div>
+             </div>
+             
+             <!-- [NEW] 3. Chart Context (Quadrants) -->
+             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                 <div class="p-4 bg-emerald-50 border border-emerald-100 rounded-xl">
+                     <h4 class="font-bold text-emerald-800 mb-1 flex items-center"><span class="mr-2">🟢</span>新手快乐区</h4>
+                     <p class="text-xs text-emerald-700 leading-relaxed">右下角区域 (Python, JS)。<br><strong>特点：</strong>语法极其简单，像读英语一样。虽然运行速度不是最快，但开发效率极高，适合快速上手。</p>
+                 </div>
+                 <div class="p-4 bg-sky-50 border border-sky-100 rounded-xl">
+                     <h4 class="font-bold text-sky-800 mb-1 flex items-center"><span class="mr-2">🔵</span>云端高薪区</h4>
+                     <p class="text-xs text-sky-700 leading-relaxed">上方区域 (Go, Java)。<br><strong>特点：</strong>企业级后端首选。不仅快，而且稳。并发能力强，能处理海量用户请求，大厂必备技能。</p>
+                 </div>
+                 <div class="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
+                     <h4 class="font-bold text-indigo-800 mb-1 flex items-center"><span class="mr-2">🟣</span>全能平衡区</h4>
+                     <p class="text-xs text-indigo-700 leading-relaxed">中间区域 (Dart/Flutter, Vue)。<br><strong>特点：</strong>在学习难度和性能之间找到了极佳的平衡点。通常用于构建用户界面，兼顾开发爽感和用户体验。</p>
+                 </div>
+                 <div class="p-4 bg-rose-50 border border-rose-100 rounded-xl">
+                     <h4 class="font-bold text-rose-800 mb-1 flex items-center"><span class="mr-2">🔴</span>硬核大神区</h4>
+                     <p class="text-xs text-rose-700 leading-relaxed">左上角区域 (C++, Rust)。<br><strong>特点：</strong>性能极其恐怖，但学习曲线陡峭。需要自己管理内存，适合做游戏引擎、操作系统等底层设施。</p>
+                 </div>
              </div>
         </div>
 
@@ -243,6 +278,17 @@
         </div>
 
     </main>
+
+    <!-- [NEW] 4. Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="font-bold text-slate-200 mb-2">© 2025 新手技术栈透视指南</p>
+            <p class="text-xs text-slate-500 max-w-lg mx-auto leading-relaxed">
+                免责声明：学习时间与薪资前景仅供参考，具体取决于个人投入程度与市场环境。
+                <br>编程是一场马拉松，找到适合自己的节奏最重要。
+            </p>
+        </div>
+    </footer>
 
     <script>
         const techData = [
@@ -622,7 +668,9 @@
                 {x: 5, y: 7, r: 15, label: 'Java'},
                 {x: 6, y: 9, r: 15, label: 'Go'},
                 {x: 9, y: 6, r: 15, label: 'Vue'},
-                {x: 4, y: 8, r: 15, label: 'Flutter/Dart'}
+                {x: 4, y: 8, r: 15, label: 'Flutter/Dart'},
+                {x: 2, y: 10, r: 10, label: 'C++/Rust'}, // Added for context logic
+                {x: 6, y: 6, r: 10, label: 'Dart/TS'}    // Added for context logic
             ];
             currentScatterChart = new Chart(ctx, {
                 type: 'bubble',
@@ -630,16 +678,31 @@
                     datasets: [{
                         label: 'Tech',
                         data: data,
-                        backgroundColor: ['#38bdf880', '#facc1580', '#fb923c80', '#06b6d480', '#4ade8080', '#6366f180'],
-                        borderColor: ['#38bdf8', '#facc15', '#fb923c', '#06b6d4', '#4ade80', '#6366f1'],
+                        backgroundColor: (ctx) => {
+                            const v = ctx.raw;
+                            if(!v) return '#333';
+                            // Logic to match quadrants loosely for demo
+                            if(v.x > 7 && v.y < 6) return '#10b98180'; // Emerald (Beginner)
+                            if(v.x < 5 && v.y > 7) return '#f43f5e80'; // Rose (Hardcore)
+                            if(v.y > 7 && v.x > 4) return '#0ea5e980'; // Sky (Cloud)
+                            return '#6366f180'; // Indigo (Balanced)
+                        },
+                        borderColor: (ctx) => {
+                            const v = ctx.raw;
+                            if(!v) return '#333';
+                             if(v.x > 7 && v.y < 6) return '#10b981'; 
+                            if(v.x < 5 && v.y > 7) return '#f43f5e'; 
+                            if(v.y > 7 && v.x > 4) return '#0ea5e9'; 
+                            return '#6366f1'; 
+                        },
                         borderWidth: 2
                     }]
                 },
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: {
-                        x: { title: {display: true, text: '学习容易度 (Easy ->)'}, min: 2, max: 11 },
-                        y: { title: {display: true, text: '运行性能 (Fast ->)'}, min: 2, max: 11 }
+                        x: { title: {display: true, text: '学习容易度 (Easy ->)'}, min: 1, max: 11 },
+                        y: { title: {display: true, text: '运行性能 (Fast ->)'}, min: 1, max: 11 }
                     },
                     plugins: { legend: {display: false}, tooltip: { callbacks: { label: (ctx) => ctx.raw.label } } }
                 },
@@ -650,8 +713,10 @@
                         chart.data.datasets[0].data.forEach((d, i) => {
                             const meta = chart.getDatasetMeta(0);
                             const pos = meta.data[i].tooltipPosition();
-                            ctx.fillStyle = '#334155'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
-                            ctx.fillText(d.label, pos.x, pos.y + 25);
+                            if(pos && pos.x !== undefined && pos.y !== undefined) {
+                                ctx.fillStyle = '#334155'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+                                ctx.fillText(d.label, pos.x, pos.y + 25);
+                            }
                         });
                     }
                 }]
